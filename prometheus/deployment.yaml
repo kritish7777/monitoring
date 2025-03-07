@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prod-prometheus-server
+  namespace: prod-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prod-prometheus-server
+  template:
+    metadata:
+      labels:
+        app: prod-prometheus-server
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v3.1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus
+        - name: prometheus-storage
+          mountPath: /prometheus
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prod-prometheus-server-conf
+          defaultMode: 420
+      - name: prometheus-storage
+        persistentVolumeClaim:
+          claimName: pvc-prometheus

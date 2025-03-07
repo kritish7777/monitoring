@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: prod-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      name: grafana
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest # Consider using a specific version instead of 'latest' for stability
+        ports:
+        - name: grafana
+          containerPort: 3000
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-storage
+        - mountPath: /usr/share/grafana/conf
+          name: grafana-config
+          readOnly: false
+      volumes:
+      - name: grafana-storage
+        persistentVolumeClaim:
+          claimName: pvc-monitoring # Ensure this PVC exists before deploying
+      - name: grafana-config
+        configMap:
+          name: grafana-config # Ensure this ConfigMap exists before deploying
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: prod-monitoring
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: 'true' # Internal LoadBalancer for Azure; modify as needed
+spec:
+  selector:
+    app: grafana
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000 # Ensure Grafana is listening on this port

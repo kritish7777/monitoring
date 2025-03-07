@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-monitoring
+  namespace: prod-monitoring
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: azurefile-csi-nfs
+  volumeName: pv-monitoring
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    pv.kubernetes.io/provisioned-by: file.csi.azure.com
+  name: pv-monitoring
+  namespace: prod-monitoring
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: azurefile-csi-nfs
+  csi:
+    driver: file.csi.azure.com
+    volumeHandle: "<unique-volume-id>" # Replace with actual Azure volume ID; must be unique for each share
+    volumeAttributes:
+      shareName: grafana # Azure File Share name
+    nodeStageSecretRef:
+      name: azure-secret # Ensure this secret exists in the same namespace
+      namespace: prod-monitoring
+  mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=0
+  - gid=0
+  - mfsymlinks
+  - cache=strict
+  - nosharesock
+  - nobrl
