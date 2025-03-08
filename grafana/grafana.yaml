@@ -39,8 +39,6 @@ kind: Service
 metadata:
   name: grafana
   namespace: prod-monitoring
-  annotations:
-    service.beta.kubernetes.io/azure-load-balancer-internal: 'true' # Internal LoadBalancer for Azure; modify as needed
 spec:
   selector:
     app: grafana
